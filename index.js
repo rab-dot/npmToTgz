@@ -11,11 +11,11 @@ function packageDirectory(dirPath) {
     const packageName = packageJson.name;
     const packageVersion = packageJson.version;
     const packageTgzName = `${packageName.split('/').pop()}-${packageVersion}.tgz`;
-    const packageTgzPath = path.join(path.dirname(dirPath), packageTgzName);
+    const packageTgzPath = path.join(dirPath, packageTgzName);
 
-    // Run the pac command to create the .tgz archive
+    // Run the npm pack command to create the .tgz archive
     try {
-      execSync(`npm pack ${dirPath} -o ${packageTgzPath}`, { stdio: 'inherit' });
+      execSync(`npm pack`, { cwd: dirPath, stdio: 'inherit' });
       console.log(`Packaged ${packageName} to ${packageTgzPath}`);
     } catch (error) {
       console.error(`Ошибка упаковки ${packageName}:`, error.message);
