@@ -20,12 +20,18 @@ function packageDirectory(dirPath, relativePath) {
     // Run the npm pack command to create the .tgz archive
     try {
       execSync(`npm pack`, { cwd: dirPath, stdio: 'inherit' });
-      try {
-        fs.renameSync(path.join(dirPath, packageTgzName), packageTgzPath);
-      } catch (error) {
-        console.error(`Ошибка перемещения файла ${packageTgzName}:`, error.message);
+
+      // Find the .tgz file in the directory
+      const files = fs.readdirSync(dirPath);
+      const tgzFile = files.find(file => file.endsWith('.tgz'));
+
+      if (tgzFile) {
+        const sourceTgzPath = path.join(dirPath, tgzFile);
+        fs.renameSync(sourceTgzPath, packageTgzPath);
+        console.log(`Packaged ${packageName} to ${packageTgzPath}`);
+      } else {
+        console.error(`Файл .tgz не найден в директории ${dirPath}`);
       }
-      console.log(`Packaged ${packageName} to ${packageTgzPath}`);
     } catch (error) {
       console.error(`Ошибка упаковки ${packageName}:`, error.message);
     }
