@@ -4,6 +4,11 @@ const { execSync } = require('child_process');
 
 const nodeModulesPath = path.resolve('D:/packages/chakra-ui/node_modules');
 const tgzOutputPath = path.resolve('D:/packages/chakra-ui/node_modules_tgz');
+const errorLogPath = path.join(__dirname, 'error.txt'); // Путь к файлу error.txt
+
+function logError(message) {
+  fs.appendFileSync(errorLogPath, message + '\n', 'utf8');
+}
 
 function packageDirectory(dirPath, relativePath) {
   const packageJsonPath = path.join(dirPath, 'package.json');
@@ -30,10 +35,14 @@ function packageDirectory(dirPath, relativePath) {
         fs.renameSync(sourceTgzPath, packageTgzPath);
         console.log(`Packaged ${packageName} to ${packageTgzPath}`);
       } else {
-        console.error(`Файл .tgz не найден в директории ${dirPath}`);
+        const errorMessage = `Файл .tgz не найден в директории ${dirPath}`;
+        console.error(errorMessage);
+        logError(`Ошибка упаковки ${packageName}: ${errorMessage}`);
       }
     } catch (error) {
-      console.error(`Ошибка упаковки ${packageName}:`, error.message);
+      const errorMessage = `Ошибка упаковки ${packageName}: ${error.message}`;
+      console.error(errorMessage);
+      logError(errorMessage);
     }
   }
 }
