@@ -11,7 +11,9 @@ function logError(message) {
 }
 
 function copyAndRenameTgz(packageName, packageVersion, relativePath) {
-  const originalTgzName = `${packageName}-${packageVersion}.tgz`;
+  // Replace '/' with '-' for scoped packages
+  const cachePackageName = packageName.replace('/', '-');
+  const originalTgzName = `${cachePackageName}-${packageVersion}.tgz`;
   const newTgzName = `${packageName.split('/').pop()}-${packageVersion}.tgz`;
   const sourceTgzPath = path.join(yarnCachePath, originalTgzName);
   const destinationTgzPath = path.join(tgzOutputPath, relativePath, newTgzName);
