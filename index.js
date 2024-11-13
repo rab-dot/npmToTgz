@@ -1,49 +1,29 @@
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
-const nodeModulesPath = path.resolve('D:/packages/chakra-ui/node_modules');
+const yarnCachePath = path.resolve('C:/yarn-cache');
 const tgzOutputPath = path.resolve('D:/packages/chakra-ui/node_modules_tgz');
-const errorLogPath = path.join(__dirname, 'error.txt'); // Путь к файлу error.txt
+const errorLogPath = path.join(__dirname, 'error.txt');
+const nodeModulesPath = path.resolve('D:/packages/chakra-ui/node_modules');
 
 function logError(message) {
   fs.appendFileSync(errorLogPath, message + '\n', 'utf8');
 }
 
-function packageDirectory(dirPath, relativePath) {
-  const packageJsonPath = path.join(dirPath, 'package.json');
-  if (fs.existsSync(packageJsonPath)) {
-    const packageJson = require(packageJsonPath);
-    const packageName = packageJson.name;
-    const packageVersion = packageJson.version;
-    const packageTgzName = `${packageName.split('/').pop()}-${packageVersion}.tgz`;
-    const packageTgzPath = path.join(tgzOutputPath, relativePath, packageTgzName);
+function copyAndRenameTgz(packageName, packageVersion, relativePath) {
+  const originalTgzName = `${packageName}-${packageVersion}.tgz`;
+  const newTgzName = `${packageName.split('/').pop()}-${packageVersion}.tgz`;
+  const sourceTgzPath = path.join(yarnCachePath, originalTgzName);
+  const destinationTgzPath = path.join(tgzOutputPath, relativePath, newTgzName);
 
-    // Ensure the output directory exists
-    fs.mkdirSync(path.dirname(packageTgzPath), { recursive: true });
-
-    // Run the npm pack command to create the .tgz archive
-    try {
-      execSync(`npm pack`, { cwd: dirPath, stdio: 'inherit' });
-
-      // Find the .tgz file in the directory
-      const files = fs.readdirSync(dirPath);
-      const tgzFile = files.find(file => file.endsWith('.tgz'));
-
-      if (tgzFile) {
-        const sourceTgzPath = path.join(dirPath, tgzFile);
-        fs.renameSync(sourceTgzPath, packageTgzPath);
-        console.log(`Packaged ${packageName} to ${packageTgzPath}`);
-      } else {
-        const errorMessage = `Файл .tgz не найден в директории ${dirPath}`;
-        console.error(errorMessage);
-        logError(`Ошибка упаковки ${packageName}: ${errorMessage}`);
-      }
-    } catch (error) {
-      const errorMessage = `Ошибка упаковки ${packageName}: ${error.message}`;
-      console.error(errorMessage);
-      logError(errorMessage);
-    }
+  try {
+    fs.mkdirSync(path.dirname(destinationTgzPath), { recursive: true });
+    fs.copyFileSync(sourceTgzPath, destinationTgzPath);
+    console.log(`Copied and renamed ${originalTgzName} to ${destinationTgzPath}`);
+  } catch (error) {
+    const errorMessage = `Error copying ${originalTgzName}: ${error.message}`;
+    console.error(errorMessage);
+    logError(errorMessage);
   }
 }
 
@@ -56,14 +36,18 @@ function traverseNodeModules(currentPath, relativePath = '') {
 
     if (entry.isDirectory()) {
       if (entry.name.startsWith('@')) {
-        // Handle scoped packages
         traverseNodeModules(fullPath, newRelativePath);
       } else {
-        packageDirectory(fullPath, newRelativePath);
+        const packageJsonPath = path.join(fullPath, 'package.json');
+        if (fs.existsSync(packageJsonPath)) {
+          const packageJson = require(packageJsonPath);
+          const packageName = packageJson.name;
+          const packageVersion = packageJson.version;
+          copyAndRenameTgz(packageName, packageVersion, newRelativePath);
+        }
       }
     }
   }
 }
 
-// Start the process
 traverseNodeModules(nodeModulesPath);
