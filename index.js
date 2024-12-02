@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 
+const BasePath = 'D:/packages/nextui'
 const yarnCachePath = path.resolve('C:/yarn-cache');
-const tgzOutputPath = path.resolve('D:/packages/chakra-ui/node_modules_tgz');
-const errorLogPath = path.join(__dirname, 'error.txt');
-const nodeModulesPath = path.resolve('D:/packages/chakra-ui/node_modules');
+const tgzOutputPath = path.join(BasePath,'node_modules_tgz');
+const errorLogPath = path.join(BasePath, 'error.txt');
+/* const errorLogPath = path.join(__dirname, 'error.txt'); */
+const nodeModulesPath = path.resolve(BasePath,'node_modules');
 
 function logError(message) {
   fs.appendFileSync(errorLogPath, message + '\n', 'utf8');
